@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<title>Simulador de Leasing</title>
+
+<style>
+    body {
+        font-family: 'Segoe UI', Arial, sans-serif;
+        background: #f5f6f7;
+        padding: 40px;
+        color: #333;
+    }
+    .container {
+        max-width: 900px;
+        margin: auto;
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    h2 {
+        margin-top: 0;
+        font-weight: 600;
+        color: #003366;
+    }
+    label {
+        display: block;
+        margin-top: 15px;
+        font-weight: 500;
+    }
+    input {
+        width: 100%;
+        padding: 8px;
+        margin-top: 5px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 15px;
+    }
+    button {
+        margin-top: 20px;
+        padding: 12px 22px;
+        background: #00509e;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    button:hover {
+        background: #003f7d;
+    }
+    .resultado {
+        margin-top: 25px;
+        padding: 15px;
+        background: #eef3f8;
+        border-left: 4px solid #003366;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 25px;
+        font-size: 14px;
+    }
+    th {
+        background: #003366;
+        color: white;
+        padding: 8px;
+        text-align: center;
+    }
+    td {
+        padding: 6px;
+        border-bottom: 1px solid #ddd;
+        text-align: right;
+    }
+    td:first-child {
+        text-align: center;
+    }
+</style>
+</head>
+
+<body>
+<div class="container">
+    <h2>Simulador de Leasing – Entrada Inicial + 83 Prestações + VR</h2>
+
+    <label>Valor do contrato (€)
+        <input type="number" id="valorContrato" value="90000">
+    </label>
+
+    <label>Entrada inicial (€)
+        <input type="number" id="entradaInicial" value="10000">
+    </label>
+
+    <label>Taxa de juro anual (%)
+        <input type="number" id="taxaAnual" value="5.53" step="0.01">
+    </label>
+
+    <label>Prazo total (meses)
+        <input type="number" id="prazo" value="84">
+    </label>
+
+    <label>Valor residual (% sobre o valor do contrato)
+        <input type="number" id="valorResidual" value="2" step="0.1">
+    </label>
+
+    <button onclick="calcular()">Executar Simulação</button>
+
+    <div class="resultado" id="resultado"></div>
+
+    <h3>Tabela de Amortização</h3>
+    <div id="tabela"></div>
+</div>
+
+<script>
+function calcular() {
+    const PV = parseFloat(document.getElementById('valorContrato').value);
+    const entrada = parseFloat(document.getElementById('entradaInicial').value);
+    const taxaAnual = parseFloat(document.getElementById('taxaAnual').value) / 100;
+    const prazoTotal = parseInt(document.getElementById('prazo').value, 10);
+    const residualPerc = parseFloat(document.getElementById('valorResidual').value) / 100;
+
+    const i = taxaAnual / 12;
+
+    // Capital financiado após entrada inicial
+    const PV1 = PV - entrada;
+
+    // Valor residual calculado sobre o valor total do contrato
+    const VR = PV * residualPerc;
+
+    // Número de prestações (exclui entrada inicial)
+    const n = prazoTotal - 1;
+
+    // Prestação mensal
+    const fator = Math.pow(1 + i, n);
+    const renda = ((PV1 - VR / fator) * i) / (1 - 1 / fator);
+
+    document.getElementById('resultado').innerHTML = `
+        <p><strong>Entrada inicial:</strong> ${entrada.toFixed(2)} €</p>
+        <p><strong>Capital financiado:</strong> ${PV1.toFixed(2)} €</p>
+        <p><strong>Renda mensal (83 prestações):</strong> ${renda.toFixed(2)} €</p>
+        <p><strong>Valor residual (mês 84):</strong> ${VR.toFixed(2)} €</p>
+    `;
+
+    gerarTabela(prazoTotal, renda, i, PV1, VR, entrada);
+}
+
+function gerarTabela(prazoTotal, renda, i, saldo, VR, entrada) {
+    let html = `
+        <table>
+            <tr>
+                <th>Mês</th>
+                <th>Renda (€)</th>
+                <th>Juros (€)</th>
+                <th>Amortização (€)</th>
+                <th>Saldo (€)</th>
+            </tr>
+    `;
+
+    // Mês 1 → entrada inicial
+    html += `
+        <tr>
+            <td>1</td>
+            <td>${entrada.toFixed(2)}</td>
+            <td>0.00</td>
+            <td>${entrada.toFixed(2)}</td>
+            <td>${saldo.toFixed(2)}</td>
+        </tr>
+    `;
+
+    for (let mes = 2; mes <= prazoTotal; mes++) {
+        const juros = saldo * i;
+        let amort = renda - juros;
+
+        if (mes === prazoTotal) {
+            amort = saldo - VR;
+            rendaMes = juros + amort;
+            saldo = VR;
+        } else {
+            saldo -= amort;
+        }
+
+        html += `
+            <tr>
+                <td>${mes}</td>
+                <td>${renda.toFixed(2)}</td>
+                <td>${juros.toFixed(2)}</td>
+                <td>${amort.toFixed(2)}</td>
+                <td>${saldo.toFixed(2)}</td>
+            </tr>
+        `;
+    }
+
+    html += `</table>`;
+    document.getElementById('tabela').innerHTML = html;
+}
+</script>
+
+</body>
+</html>
