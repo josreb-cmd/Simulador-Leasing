@@ -7,73 +7,121 @@
 <style>
     body {
         font-family: 'Segoe UI', Arial, sans-serif;
-        background: #f5f6f7;
+        background: #eef1f7;
         padding: 40px;
         color: #333;
+        margin: 0;
     }
+
     .container {
-        max-width: 900px;
+        max-width: 1000px;
         margin: auto;
-        background: white;
-        padding: 30px;
-        border-radius: 8px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        background: #ffffff;
+        padding: 35px;
+        border-radius: 12px;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.08);
     }
+
     h2 {
         margin-top: 0;
-        font-weight: 600;
-        color: #003366;
+        font-weight: 700;
+        color: #1a2a6c;
+        text-align: center;
+        font-size: 1.9rem;
     }
+
     label {
         display: block;
-        margin-top: 15px;
-        font-weight: 500;
+        margin-top: 18px;
+        font-weight: 600;
+        color: #1a2a6c;
     }
+
     input {
         width: 100%;
-        padding: 8px;
-        margin-top: 5px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
+        padding: 12px;
+        margin-top: 6px;
+        border: 1px solid #cfd6e4;
+        border-radius: 6px;
         font-size: 15px;
+        box-sizing: border-box;
     }
+
     button {
-        margin-top: 20px;
-        padding: 12px 22px;
-        background: #00509e;
+        margin-top: 25px;
+        padding: 14px;
+        width: 100%;
+        background: linear-gradient(135deg, #1a2a6c, #1a73e8);
         color: white;
         border: none;
-        border-radius: 6px;
-        font-size: 16px;
+        border-radius: 8px;
+        font-size: 17px;
         font-weight: 600;
         cursor: pointer;
+        transition: 0.2s;
     }
+
     button:hover {
-        background: #003f7d;
+        opacity: 0.9;
     }
-    .resultado {
+
+    /* ---------- CARDS RESUMO PREMIUM ---------- */
+    .resumo-cards {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        margin-top: 30px;
+    }
+
+    .card {
+        background: #f0f4ff;
+        padding: 16px 20px;
+        border-radius: 8px;
+        min-width: 220px;
+        border-left: 4px solid #1a73e8;
+        flex: 1;
+    }
+
+    .card .titulo {
+        font-size: 0.95rem;
+        color: #1a2a6c;
+        font-weight: 600;
+    }
+
+    .card .valor {
+        font-size: 1.35rem;
+        font-weight: 700;
+        margin-top: 6px;
+        color: #1a2a6c;
+    }
+
+    /* ---------- TABELA ---------- */
+    #tabela {
         margin-top: 25px;
-        padding: 15px;
-        background: #eef3f8;
-        border-left: 4px solid #003366;
+        overflow-x: auto;
     }
+
     table {
         width: 100%;
         border-collapse: collapse;
-        margin-top: 25px;
         font-size: 14px;
+        min-width: 800px;
     }
+
     th {
-        background: #003366;
+        background: #1a2a6c;
         color: white;
-        padding: 8px;
+        padding: 10px;
         text-align: center;
+        font-weight: 600;
     }
+
     td {
-        padding: 6px;
-        border-bottom: 1px solid #ddd;
+        padding: 8px;
+        border-bottom: 1px solid #d8dfea;
         text-align: right;
     }
+
     td:first-child {
         text-align: center;
     }
@@ -82,7 +130,7 @@
 
 <body>
 <div class="container">
-    <h2>Simulador de Leasing – Entrada Inicial + 83 Prestações + VR</h2>
+    <h2>Simulador de Leasing </h2>
 
     <label>Valor do contrato (€)
         <input type="number" id="valorContrato" value="90000">
@@ -106,13 +154,21 @@
 
     <button onclick="calcular()">Executar Simulação</button>
 
-    <div class="resultado" id="resultado"></div>
+    <div id="resumoCards" class="resumo-cards"></div>
 
-    <h3>Tabela de Amortização</h3>
+    <h3 style="margin-top:35px; color:#1a2a6c; font-size:1.3rem;">Tabela de Amortização</h3>
     <div id="tabela"></div>
 </div>
 
 <script>
+/* ---------- FORMATADOR PT-PT ---------- */
+function fmt(v) {
+    return v.toLocaleString("pt-PT", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
 function calcular() {
     const PV = parseFloat(document.getElementById('valorContrato').value);
     const entrada = parseFloat(document.getElementById('entradaInicial').value);
@@ -121,31 +177,19 @@ function calcular() {
     const residualPerc = parseFloat(document.getElementById('valorResidual').value) / 100;
 
     const i = taxaAnual / 12;
-
-    // Capital financiado após entrada inicial
     const PV1 = PV - entrada;
-
-    // Valor residual calculado sobre o valor total do contrato
     const VR = PV * residualPerc;
-
-    // Número de prestações (exclui entrada inicial)
     const n = prazoTotal - 1;
 
-    // Prestação mensal
+    /* ---------- FÓRMULA ORIGINAL (mantida) ---------- */
     const fator = Math.pow(1 + i, n);
     const renda = ((PV1 - VR / fator) * i) / (1 - 1 / fator);
-
-    document.getElementById('resultado').innerHTML = `
-        <p><strong>Entrada inicial:</strong> ${entrada.toFixed(2)} €</p>
-        <p><strong>Capital financiado:</strong> ${PV1.toFixed(2)} €</p>
-        <p><strong>Renda mensal (83 prestações):</strong> ${renda.toFixed(2)} €</p>
-        <p><strong>Valor residual (mês 84):</strong> ${VR.toFixed(2)} €</p>
-    `;
 
     gerarTabela(prazoTotal, renda, i, PV1, VR, entrada);
 }
 
-function gerarTabela(prazoTotal, renda, i, saldo, VR, entrada) {
+function gerarTabela(prazoTotal, renda, i, saldoInicial, VR, entrada) {
+    let saldo = saldoInicial;
     let html = `
         <table>
             <tr>
@@ -157,14 +201,17 @@ function gerarTabela(prazoTotal, renda, i, saldo, VR, entrada) {
             </tr>
     `;
 
-    // Mês 1 → entrada inicial
+    let totalJuros = 0;
+    let totalAmort = entrada;
+
+    /* ---------- Mês 1: Entrada ---------- */
     html += `
         <tr>
             <td>1</td>
-            <td>${entrada.toFixed(2)}</td>
-            <td>0.00</td>
-            <td>${entrada.toFixed(2)}</td>
-            <td>${saldo.toFixed(2)}</td>
+            <td>${fmt(entrada)}</td>
+            <td>0,00</td>
+            <td>${fmt(entrada)}</td>
+            <td>${fmt(saldo)}</td>
         </tr>
     `;
 
@@ -174,25 +221,62 @@ function gerarTabela(prazoTotal, renda, i, saldo, VR, entrada) {
 
         if (mes === prazoTotal) {
             amort = saldo - VR;
-            rendaMes = juros + amort;
             saldo = VR;
         } else {
             saldo -= amort;
         }
 
+        totalJuros += juros;
+        totalAmort += amort;
+
         html += `
             <tr>
                 <td>${mes}</td>
-                <td>${renda.toFixed(2)}</td>
-                <td>${juros.toFixed(2)}</td>
-                <td>${amort.toFixed(2)}</td>
-                <td>${saldo.toFixed(2)}</td>
+                <td>${fmt(renda)}</td>
+                <td>${fmt(juros)}</td>
+                <td>${fmt(amort)}</td>
+                <td>${fmt(saldo)}</td>
             </tr>
         `;
     }
 
     html += `</table>`;
     document.getElementById('tabela').innerHTML = html;
+
+    /* ---------- RESUMO PREMIUM ---------- */
+    const totalPago = totalAmort + totalJuros + VR;
+
+    document.getElementById('resumoCards').innerHTML = `
+        <div class="card">
+            <div class="titulo">Entrada Inicial</div>
+            <div class="valor">${fmt(entrada)} €</div>
+        </div>
+
+        <div class="card">
+            <div class="titulo">Renda Mensal</div>
+            <div class="valor">${fmt(renda)} €</div>
+        </div>
+
+        <div class="card">
+            <div class="titulo">Total Amortizado (Capital)</div>
+            <div class="valor">${fmt(totalAmort)} €</div>
+        </div>
+
+        <div class="card">
+            <div class="titulo">Total de Juros</div>
+            <div class="valor">${fmt(totalJuros)} €</div>
+        </div>
+
+        <div class="card">
+            <div class="titulo">Valor Residual</div>
+            <div class="valor">${fmt(VR)} €</div>
+        </div>
+
+        <div class="card">
+            <div class="titulo">Total Pago no Contrato</div>
+            <div class="valor">${fmt(totalPago)} €</div>
+        </div>
+    `;
 }
 </script>
 
